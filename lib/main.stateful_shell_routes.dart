@@ -74,19 +74,21 @@ final appRouter = GoRouter(
     *
     * TODO 5. HomeScreenのBtmNavi部分の変更②：onTap: navigationShell.goBranchに
     *
-    * TODO 6. (optional) 状態管理はNavigationShellがやってくれるのでHomeScreen自体はStatelessWidgetにしても問題ない
-    *
-    *  TODO 7. navigationShell.goBranchメソッドでinitialLocationを設定する場合（公式のサンプル176行目より）
+    * TODO 6. 開いているタブと同じタブをタップした際には、そのタブのinitialLocationを持ってくる（公式のサンプル176行目より）
     *   https://github.com/flutter/packages/blob/main/packages/go_router/example/lib/stateful_shell_route.dart
+    *   => 開いているタブと同じタブをタップした際には、そのタブのinitialLocationを持ってくる
+    *     （goBranchの第二引数を「initialLocation: index == navigationShell.currentIndex」にする）
+    *       => これをやらないと開いているタブと同じタブをタップしてもそのままの状態から変わらない
     *
-    *
+    * TODO 7. (optional) 状態管理はNavigationShellがやってくれるのでHomeScreen自体はStatelessWidgetにしても問題ない
     * */
     //TODO.1  ShellRoute => StatefulShellRoute.indexedStackに
     StatefulShellRoute.indexedStack(
       //ShellRoute(
       //navigatorKey: _shellNavigatorKey,
       //TODO 3. HomeScreenに入れる引数をchild(Widget) => navigationShell(NavigationSHell)に
-      builder: (context, state, navigationShell) => HomeScreen(navigationShell: navigationShell),
+      builder: (context, state, navigationShell) =>
+          HomeScreen(navigationShell: navigationShell),
       //builder: (context, state, child) => HomeScreen(child: child),
       branches: [
         //routes: [
@@ -166,7 +168,6 @@ final appRouter = GoRouter(
         ),
       ],
     ),
-
   ],
 );
 
@@ -184,13 +185,14 @@ class MyApp extends StatelessWidget {
 /// Builds the "shell" for the app by building a Scaffold with a
 /// BottomNavigationBar, where [child] is placed in the body of the Scaffold.
 class HomeScreen extends StatefulWidget {
-
   //TODO 3. HomeScreenに入れる引数をchild(Widget) => navigationShell(NavigationSHell)に
   final StatefulNavigationShell navigationShell;
+
   //final Widget child;
 
   //TODO 3. HomeScreenに入れる引数をchild(Widget) => navigationShell(NavigationSHell)に
   const HomeScreen({Key? key, required this.navigationShell}) : super(key: key);
+
   //const HomeScreen({Key? key, required this.child}) : super(key: key);
 
   @override
@@ -208,8 +210,22 @@ class _HomeScreenState extends State<HomeScreen> {
         //TODO 4. HomeScreenのBtmNavi部分の変更①：currentIndex : indexの計算メソッド => navigationShell.currentIndexに
         currentIndex: widget.navigationShell.currentIndex,
         //currentIndex: _calcSelectedIndex(),
+
+        /*
+        * TODO 6. 開いているタブと同じタブをタップした際には、そのタブのinitialLocationを持ってくる（公式のサンプル176行目より）
+        *   https://github.com/flutter/packages/blob/main/packages/go_router/example/lib/stateful_shell_route.dart
+        *   => 開いているタブと同じタブをタップした際には、そのタブのinitialLocationを持ってくる
+        *     （goBranchの第二引数を「initialLocation: index == navigationShell.currentIndex」にする）
+        *       => これをやらないと開いているタブと同じタブをタップしてもそのままの状態から変わらない
+        * */
+        onTap: (int index) => widget.navigationShell.goBranch(
+          index,
+          initialLocation: index == widget.navigationShell.currentIndex,
+        ),
+
         //TODO 5. HomeScreenのBtmNavi部分の変更②：onTap: navigationShell.goBranchに
-        onTap: (int index) => widget.navigationShell.goBranch(index),
+        //onTap: (int index) => widget.navigationShell.goBranch(index),
+
         //onTap: (int index) => _onItemTapped(index),
         items: [
           BottomNavigationBarItem(icon: Icon(Icons.ad_units), label: "Normal"),
@@ -220,35 +236,35 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  //TODO 4. HomeScreenのBtmNavi部分の変更①：currentIndex : indexの計算メソッド => navigationShell.currentIndexに
-  // int _calcSelectedIndex() {
-  //   final location = GoRouterState.of(context).location;
-  //   if (location.startsWith(ScreenPaths.normal)) {
-  //     return 0;
-  //   }
-  //   if (location.startsWith(ScreenPaths.dialog)) {
-  //     return 1;
-  //   }
-  //   if (location.startsWith(ScreenPaths.willPop)) {
-  //     return 2;
-  //   }
-  //   return 0;
-  // }
+//TODO 4. HomeScreenのBtmNavi部分の変更①：currentIndex : indexの計算メソッド => navigationShell.currentIndexに
+// int _calcSelectedIndex() {
+//   final location = GoRouterState.of(context).location;
+//   if (location.startsWith(ScreenPaths.normal)) {
+//     return 0;
+//   }
+//   if (location.startsWith(ScreenPaths.dialog)) {
+//     return 1;
+//   }
+//   if (location.startsWith(ScreenPaths.willPop)) {
+//     return 2;
+//   }
+//   return 0;
+// }
 
-  //TODO 5. HomeScreenのBtmNavi部分の変更②：onTap: navigationShell.goBranchに
-  // _onItemTapped(int index) {
-  //   switch (index) {
-  //     case 0:
-  //       GoRouter.of(context).go(ScreenPaths.normal);
-  //       break;
-  //     case 1:
-  //       GoRouter.of(context).go(ScreenPaths.dialog);
-  //       break;
-  //     case 2:
-  //       GoRouter.of(context).go(ScreenPaths.willPop);
-  //       break;
-  //   }
-  // }
+//TODO 5. HomeScreenのBtmNavi部分の変更②：onTap: navigationShell.goBranchに
+// _onItemTapped(int index) {
+//   switch (index) {
+//     case 0:
+//       GoRouter.of(context).go(ScreenPaths.normal);
+//       break;
+//     case 1:
+//       GoRouter.of(context).go(ScreenPaths.dialog);
+//       break;
+//     case 2:
+//       GoRouter.of(context).go(ScreenPaths.willPop);
+//       break;
+//   }
+// }
 }
 
 //------- １．Normal -------
