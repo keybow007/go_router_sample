@@ -12,7 +12,7 @@ import 'package:web_url_strategy/web_url_strategy.dart';
 *           （家系図に沿った画面遷移をしてくれる）
 *
 * １．Normal : NormalPage => NormalScreenを開く
-* ２．Dialog : DialogPage => showDialogでAlertDialogを開く
+* ２．Dialog : ShowDialogPage => showDialogでAlertDialogを開く
 * ３．WillPop: WillPopPage => WillPopScreenを開く（引数渡しも）閉じる際にWillPop
 * https://pub.dev/documentation/go_router/latest/topics/Navigation-topic.html#prevent-navigation
 *   => WillPopScopeはAndroidデバイスの戻るボタンを押してもWorkするが、これをgo_routerではできないそうだ
@@ -29,10 +29,12 @@ import 'package:web_url_strategy/web_url_strategy.dart';
 *   １．まずはNavigatorの部分をgo_routerに変える（
 *   ２．DialogPageのDialogをshowDialogからgo_router使えるようにWidget化
 *   ３．Dialogの表示のされ方がおかしいので、一工夫必要だが面倒なので省略
-*     （ダイアログにURLがいらんねやったら、もうshowDialogでええんちゃうか？
-*       => チュートリアルだけ紹介して本編での実装は省略）
-*     https://stackoverflow.com/questions/75690299/how-do-i-show-a-dialog-in-flutter-using-a-go-router-route
-*     https://croxx5f.hashnode.dev/adding-modal-routes-to-your-gorouter
+*     （ダイアログにURLがいらんねやったら、もうshowDialogでいいんじゃね？と思うが
+*        => このチュートリアルのコードを使ってついでにRouteの謎解きをしようか
+*      https://croxx5f.hashnode.dev/adding-modal-routes-to-your-gorouter
+*     => 3+: WillPopScopeの方はやらない
+*         https://docs.flutter.dev/ui/navigation#using-router-and-navigator-together
+*         https://pub.dev/documentation/go_router/latest/topics/Navigation-topic.html#prevent-navigation
 *   ４．builderとpageBuilderの違い（pageBuilderはアニメーションがつけられる）
 *     => NormalScreenでやってみよう
 *     https://pub.dev/documentation/go_router/latest/topics/Transition%20animations-topic.html
@@ -58,6 +60,7 @@ void main() {
 //TODO[go_router.1]goメソッドで使うパスの設定
 class ScreenPaths {
   //親子方式の場合はGoRouteのpathに「/」不要
+  //ルートのパスには「/」が必要だが、childRouteには「/」をつけてはいけない
   static String home = "/";
   static String normal = "normal";
   static String willPop = "will_pop";
@@ -95,11 +98,20 @@ final appRouter = GoRouter(
             );
           },
         ),
-        //TODO[go_router.2]DialogもNavigatorで開かれるScreenなのでRouteに加える（ただしこのままだとトラップ有り）
+        //TODO[go_router.3]Dialogの表示のされ方がおかしいので、一工夫必要
+        //（ダイアログにURLがいらんねやったら、もうshowDialogでいいんじゃね？と思うが）
         GoRoute(
           path: ScreenPaths.confirmDialog,
-          builder: (context, state) => ConfirmDialog(),
+          //builder(戻り値Widget）ではなくpageBuilder（戻り値pageBuilder）にする必要あり
+          pageBuilder: (context, state) => DialogPage(
+            builder: (_) => ConfirmDialog(),
+          ),
         ),
+        //TODO[go_router.2]DialogもNavigatorで開かれるScreenなのでRouteに加える（ただしこのままだとトラップ有り）
+        // GoRoute(
+        //   path: ScreenPaths.confirmDialog,
+        //   builder: (context, state) => ConfirmDialog(),
+        // ),
         GoRoute(
           path: ScreenPaths.willPop,
           //TODO[go_route.1]値渡しの方法(extraを使おう: extraはObjectなのでなんでもいい。）
@@ -145,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final _pages = [
     NormalPage(),
-    DialogPage(),
+    ShowDialogPage(),
     WillPopPage(),
   ];
 
@@ -230,8 +242,8 @@ class NormalScreen extends StatelessWidget {
 }
 
 //------- ２．Dialog -------
-class DialogPage extends StatelessWidget {
-  const DialogPage({Key? key}) : super(key: key);
+class ShowDialogPage extends StatelessWidget {
+  const ShowDialogPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -431,4 +443,44 @@ class WillPopScreen extends StatelessWidget {
     );
     return isConfirmed;
   }
+}
+
+//TODO[go_router.3]Dialogの表示のされ方がおかしいので、一工夫必要
+//https://croxx5f.hashnode.dev/adding-modal-routes-to-your-gorouter#heading-tldr-the-solution
+/// A dialog page with Material entrance and exit animations, modal barrier color,
+/// and modal barrier behavior (dialog is dismissible with a tap on the barrier).
+class DialogPage<T> extends Page<T> {
+  final Offset? anchorPoint;
+  final Color? barrierColor;
+  final bool barrierDismissible;
+  final String? barrierLabel;
+  final bool useSafeArea;
+  final CapturedThemes? themes;
+  final WidgetBuilder builder;
+
+  const DialogPage({
+    required this.builder,
+    this.anchorPoint,
+    this.barrierColor = Colors.black54,
+    this.barrierDismissible = true,
+    this.barrierLabel,
+    this.useSafeArea = true,
+    this.themes,
+    super.key,
+    super.name,
+    super.arguments,
+    super.restorationId,
+  });
+
+  @override
+  Route<T> createRoute(BuildContext context) => DialogRoute<T>(
+      context: context,
+      settings: this,
+      builder: builder,
+      anchorPoint: anchorPoint,
+      barrierColor: barrierColor,
+      barrierDismissible: barrierDismissible,
+      barrierLabel: barrierLabel,
+      useSafeArea: useSafeArea,
+      themes: themes);
 }

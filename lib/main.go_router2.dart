@@ -33,6 +33,7 @@ class ScreenPaths {
 
   static String home = "/";
   //TODO[go_router.１]親子方式の場合はGoRouteのpathに「/」必要
+  //ルートのパスには「/」が必要だが、childRouteには「/」をつけてはいけない
   //"top-level path must start with \"/\": GoRoute(name: null, path: normal)"になる
   static String normal = "/normal";
   static String willPop = "/will_pop";
@@ -67,7 +68,10 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: ScreenPaths.confirmDialog,
-      builder: (context, state) => ConfirmDialog(),
+      //builder(戻り値Widget）ではなくpageBuilder（戻り値pageBuilder）にする必要あり
+      pageBuilder: (context, state) => DialogPage(
+        builder: (_) => ConfirmDialog(),
+      ),
     ),
     GoRoute(
       path: ScreenPaths.willPop,
@@ -102,7 +106,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final _pages = [
     NormalPage(),
-    DialogPage(),
+    ShowDialogPage(),
     WillPopPage(),
   ];
 
@@ -184,8 +188,8 @@ class NormalScreen extends StatelessWidget {
 }
 
 //------- ２．Dialog -------
-class DialogPage extends StatelessWidget {
-  const DialogPage({Key? key}) : super(key: key);
+class ShowDialogPage extends StatelessWidget {
+  const ShowDialogPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -328,4 +332,43 @@ class WillPopScreen extends StatelessWidget {
     );
     return isConfirmed;
   }
+}
+
+//https://croxx5f.hashnode.dev/adding-modal-routes-to-your-gorouter#heading-tldr-the-solution
+/// A dialog page with Material entrance and exit animations, modal barrier color,
+/// and modal barrier behavior (dialog is dismissible with a tap on the barrier).
+class DialogPage<T> extends Page<T> {
+  final Offset? anchorPoint;
+  final Color? barrierColor;
+  final bool barrierDismissible;
+  final String? barrierLabel;
+  final bool useSafeArea;
+  final CapturedThemes? themes;
+  final WidgetBuilder builder;
+
+  const DialogPage({
+    required this.builder,
+    this.anchorPoint,
+    this.barrierColor = Colors.black54,
+    this.barrierDismissible = true,
+    this.barrierLabel,
+    this.useSafeArea = true,
+    this.themes,
+    super.key,
+    super.name,
+    super.arguments,
+    super.restorationId,
+  });
+
+  @override
+  Route<T> createRoute(BuildContext context) => DialogRoute<T>(
+      context: context,
+      settings: this,
+      builder: builder,
+      anchorPoint: anchorPoint,
+      barrierColor: barrierColor,
+      barrierDismissible: barrierDismissible,
+      barrierLabel: barrierLabel,
+      useSafeArea: useSafeArea,
+      themes: themes);
 }

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 /*
 * <Navigatorバージョン>
 * １．Normal : NormalPage => NormalScreenを開く
-* ２．Dialog : DialogPage => showDialogでAlertDialogを開く
+* ２．Dialog : ShowDialogPage => showDialogでAlertDialogを開く
 * ３．WillPop: WillPopPage => WillPopScreenを開く（引数渡しも）閉じる際にWillPop
 * https://pub.dev/documentation/go_router/latest/topics/Navigation-topic.html#prevent-navigation
 *   => WillPopScopeはAndroidデバイスの戻るボタンを押してもWorkするが、これをgo_routerではできないそうだ
@@ -38,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final _pages = [
     NormalPage(),
-    DialogPage(),
+    ShowDialogPage(),
     WillPopPage(),
   ];
 
@@ -117,8 +117,8 @@ class NormalScreen extends StatelessWidget {
 }
 
 //------- ２．Dialog -------
-class DialogPage extends StatelessWidget {
-  const DialogPage({Key? key}) : super(key: key);
+class ShowDialogPage extends StatelessWidget {
+  const ShowDialogPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
